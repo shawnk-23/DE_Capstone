@@ -21,7 +21,7 @@ Banks want to automate the loan eligibility process (in real-time) based on cust
 ## Project Files
 
 - Etl.py: Used to extract and transform json files then load to DB.
-- Transactions.py: Front-end for user to interact with the database.
+- Transactions.py: Front-end for user to interact with the data related to transactions.
 - Customer.py: Front-end to access/modify customer data.
 - Graph.py: Used for visualizing transaction results.
 - Loan.py: Used to fetch data from API and load to DB.

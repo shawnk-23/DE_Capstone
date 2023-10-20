@@ -1,9 +1,11 @@
+# Import necessary libraries
 import pandas as pd
 import seaborn as sns
 import mysql.connector
 import matplotlib.pyplot as plt
 import configparser
 
+# Read database configuration from 'config.ini' using configparser
 config = configparser.ConfigParser()
 config.read('config.ini')
 
@@ -23,7 +25,10 @@ GROUP BY TRANSACTION_TYPE
 ORDER BY TRANSACTION_COUNT DESC
 """
 
+# Execute the SQL query and store the result in a Pandas DataFrame
 df = pd.read_sql(query, db)
+
+# Create a bar plot to visualize transaction frequencies by types
 plt.figure(figsize=(8, 6))
 plt.title("Transaction Frequencies by Types")
 sns.set(style="whitegrid")
@@ -52,9 +57,11 @@ ORDER BY CUSTOMER_COUNT DESC
 cursor.execute(query2)
 result = cursor.fetchall()
 
+# Extract states and customer counts from the result
 cnt = [row[1] for row in result]
 states = [row[0] for row in result]
 
+# Create a bar plot to show the number of customers in each state
 fig, ax = plt.subplots(figsize=(10, 6))
 plt.bar(states, cnt, width=0.6, color='green')
 plt.title('High Number of Customers by States')
@@ -89,7 +96,7 @@ plt.bar([row[0] for row in result], [row[1] for row in result], color='red')
 plt.title('Total Transactions for Top 10 Customers')
 plt.xlabel('Customer Names')
 plt.xticks(range(len(result)), [row[0]
-           for row in result], rotation=45, ha='right')
+                                for row in result], rotation=45, ha='right')
 plt.ylabel('Total Transactions')
 plt.subplots_adjust(bottom=0.19)
 

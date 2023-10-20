@@ -1,13 +1,14 @@
+# Import necessary libraries
 import mysql.connector
 import pandas as pd
 import matplotlib.pyplot as plt
 import configparser
 
+# Read database configuration from 'config.ini' using configparser
 config = configparser.ConfigParser()
 config.read('config.ini')
 
 # Connect to the MySQL database
-
 db = mysql.connector.connect(
     host="localhost",
     user=config['database']['user'],
@@ -25,7 +26,8 @@ total_self_employed = self_employed.shape[0]
 approval_percentage = round(
     (approved_self_employed.shape[0] / total_self_employed) * 100, 2)
 
-labels = ['Approved', 'Not Approved']
+# Create a pie chart showing the approval rate for self-employed applicants
+labels = ['Approved', 'Rejected']
 colors = ['#5DBE98', '#FFBB51']
 sizes = [approval_percentage, round(100 - approval_percentage, 2)]
 
@@ -44,6 +46,7 @@ total_married_male = loan_df[(loan_df['Married'] == 'Yes') & (
 rejection_percentage = round(
     (married_male_rejected.shape[0] / total_married_male) * 100, 2)
 
+# Create a pie chart showing the rejection rate for married male applicants
 labels = ['Rejected', 'Approved']
 colors = ['#5F88EE', '#FF884D']
 sizes = [rejection_percentage, round(100 - rejection_percentage, 2)]
@@ -63,7 +66,8 @@ data = cursor.fetchall()
 months = [row[0] for row in data]
 transaction_values = [round(row[1], 2) for row in data]
 
-plt.figure(3, figsize=(10, 6))  # Larger figure size
+# Create a bar chart showing the total transaction values for the top three months
+plt.figure(3, figsize=(10, 6))
 plt.bar(months, transaction_values, color='#5AB3A5')
 plt.xlabel('Month')
 plt.ylabel('Total Transaction Value')
@@ -84,12 +88,13 @@ data = cursor.fetchall()
 branch_codes = [str(row[0]) for row in data]
 healthcare_transaction_values = [round(row[1], 2) for row in data]
 
-plt.figure(4, figsize=(10, 6))  # Larger figure size
+# Create a bar chart showing the total healthcare transaction values for the top branches
+plt.figure(4, figsize=(10, 6))
 plt.bar(branch_codes, healthcare_transaction_values, color='#8A9EB5')
 plt.xlabel('Branch Code')
 plt.ylabel('Total Transaction Value')
 plt.title('Top Branches with Highest Healthcare Transaction Value')
-plt.xticks(rotation=45)
+plt.xticks(rotation=0)
 
 # Add count labels on top of each bar
 for i, v in enumerate(healthcare_transaction_values):
@@ -97,5 +102,6 @@ for i, v in enumerate(healthcare_transaction_values):
 
 plt.show()
 
+# Close the database connection
 cursor.close()
 db.close()

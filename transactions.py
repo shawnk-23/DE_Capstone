@@ -1,126 +1,159 @@
-from pyspark.sql import SparkSession
-import findspark
+# Import necessary libraries
+# for connecting to the MySQL database
+import mysql.connector
+# for tabular display of data
+from tabulate import tabulate
+# for reading configuration settings
 import configparser
-findspark.init()
+import os
 
-jar_location = 'mysql-connector-java-8.0.23.jar'
-spark = SparkSession.builder \
-    .appName("mysql_connect") \
-    .config("spark.jars", jar_location) \
-    .getOrCreate()
+# Clear the screen (OS-specific)
+os.system('cls' if os.name == 'nt' else 'clear')
 
-# Define db connect parameters
-url = "jdbc:mysql://localhost:3306/creditcard_capstone"
-
-config = configparser.ConfigParser()
-config.read('config.ini')
-
-db_properties = {
-    "user": config.get('database', 'user'),
-    "password": config.get('database', 'password'),
-    "driver": config.get('database', 'driver')
-}
+# Function to display transactions by zip code and date
 
 
-# Load tables into DataFrames
-branch_dataframe = spark.read.jdbc(
-    url, "creditcard_capstone.CDW_SAPP_BRANCH", properties=db_properties)
-credit_dataframe = spark.read.jdbc(
-    url, "creditcard_capstone.CDW_SAPP_CREDIT_CARD", properties=db_properties)
-customer_dataframe = spark.read.jdbc(
-    url, "creditcard_capstone.CDW_SAPP_CUSTOMER", properties=db_properties)
+def display_transactions_by_zip_code_and_date(cursor):
+    zip_code = input("Enter the customer's zip code: ")
+    year = input("Enter the year (YYYY): ")
+    month = input("Enter the month (MM): ")
 
-# Create temporary views for the DataFrames
-branch_dataframe.createOrReplaceTempView("BRANCH")
-credit_dataframe.createOrReplaceTempView("CREDIT")
-customer_dataframe.createOrReplaceTempView("CUSTOMER")
+    # SQL query to retrieve transactions
+    query = """
+    SELECT cust_zip, transaction_id, transaction_type, transaction_value
+    FROM cdw_sapp_credit_card cc
+    JOIN cdw_sapp_customer c ON cc.cust_ssn = c.ssn
+    WHERE MONTH(timeid) = %s AND YEAR(timeid) = %s AND cust_zip = %s
+    ORDER BY DAY(timeid) DESC
+    """
+    cursor.execute(query, (month, year, zip_code))
+    results = cursor.fetchall()
 
-# Function to execute and show a SQL query
+    # Display query results in a tabular format
+    if results:
+        headers = ['Zip Code', 'Transaction ID',
+                   'Transaction Type', 'Transaction Value']
+        print(tabulate(results, headers, tablefmt='grid'))
+    else:
+        print("No results found.")
+
+# Function to display transactions by type
 
 
-def execute_and_show_query(query):
-    result_dataframe = spark.sql(query)
-    result_dataframe.show(result_dataframe.count())
-    print(f"{result_dataframe.count()} row(s) fetched")
+def display_transactions_by_type(cursor):
+    # List of available transaction types
+    transaction_types = ['Bills', 'Education',
+                         'Entertainment', 'Gas', 'Grocery', 'Healthcare', 'Test']
 
-# Transaction function to display transactions by zip code and date
+    # Display available transaction types
+    print("Available Transaction Types:")
+    for i, transaction_type in enumerate(transaction_types, start=1):
+        print(f"{i}) {transaction_type}")
 
+    choice_type = input(
+        "Enter the number corresponding to the transaction type: ")
 
-def display_transactions_by_zip_date():
-    while True:
-        zip_code = input("Enter Zip Code: ")
-        if not zip_code.isnumeric():
-            print("Invalid Zip Code. Please try again!")
+    # Validate and select a transaction type
+    if choice_type.isnumeric():
+        choice_type = int(choice_type)
+        if 1 <= choice_type <= len(transaction_types):
+            transaction_type = transaction_types[choice_type - 1]
+
+            # SQL query to retrieve transaction count and total value
+            query = """
+            SELECT COUNT(TRANSACTION_ID), SUM(TRANSACTION_VALUE)
+            FROM cdw_sapp_credit_card
+            WHERE TRANSACTION_TYPE = %s
+            """
+            cursor.execute(query, (transaction_type,))
+            results = cursor.fetchone()
+
+            # Display query results
+            if results[0] > 0:
+                headers = ['Number of Transactions', 'Total Value']
+                data = [[results[0], f"${results[1]:,.2f}"]]
+                print(tabulate(data, headers, tablefmt='grid'))
+            else:
+                print(f"No {transaction_type} transactions found.\n")
         else:
-            break
-    month = input("Enter Month (2 digits): ")
-    year = input("Enter Year (4 digits): ")
-    if len(month) == 1:
-        month = "0" + month
-
-    query = f"""SELECT cc.*
-              FROM CREDIT cc
-              LEFT JOIN CUSTOMER c
-              ON cc.CUST_SSN = c.SSN
-              WHERE c.cust_zip = {zip_code}
-              AND SUBSTRING(cc.TIMEID, 1, 4) = '{year}'
-              AND SUBSTRING(cc.TIMEID, 5, 2) = '{month}'
-              ORDER BY TIMEID DESC"""
-
-    execute_and_show_query(query)
-
-# Transaction function to display number and total value of transactions by type
+            print("Invalid choice. Please enter a valid number.\n")
+    else:
+        print("Invalid input. Please enter a valid number.\n")
 
 
-def display_transactions_by_type():
-    credit_dataframe.select("TRANSACTION_TYPE").distinct().show()
-    transaction_type = input("Select Transaction Type: ")
+def display_transactions_by_branch_state(cursor):
+    branch_state = input("Enter the branch state: ")
 
-    query = f"""SELECT TRANSACTION_TYPE, COUNT(*) as NUMBER, ROUND(SUM(TRANSACTION_VALUE), 2) as TOTAL_VALUES
-                FROM CREDIT AS cc
-                WHERE TRANSACTION_TYPE = '{transaction_type}'
-                GROUP BY TRANSACTION_TYPE;"""
+    # SQL query to retrieve transaction count and total value
+    query = """
+    SELECT COUNT(TRANSACTION_ID), SUM(TRANSACTION_VALUE)
+    FROM cdw_sapp_credit_card c
+    JOIN cdw_sapp_branch b ON c.BRANCH_CODE = b.BRANCH_CODE
+    WHERE b.BRANCH_STATE = %s
+    """
+    cursor.execute(query, (branch_state,))
+    results = cursor.fetchone()
 
-    execute_and_show_query(query)
-
-# Transaction function to display number and total value of transactions by branch state
-
-
-def display_transactions_by_branch_state():
-    state = input("Enter State: ")
-
-    query = f"""SELECT b.BRANCH_CODE, b.BRANCH_STATE, COUNT(*) as NUMBER, ROUND(SUM(cc.TRANSACTION_VALUE), 2) as TOTAL_VALUES
-                FROM CREDIT as cc, BRANCH as b
-                WHERE cc.BRANCH_CODE = b.BRANCH_CODE and (b.BRANCH_STATE='{state}')
-                GROUP BY b.BRANCH_CODE, b.BRANCH_STATE
-                ORDER BY b.BRANCH_CODE;"""
-
-    execute_and_show_query(query)
+    # Display query results
+    if results[0] > 0:
+        headers = ['Number of Transactions', 'Total Value']
+        data = [[results[0], f"${results[1]:,.2f}"]]
+        print(tabulate(data, headers, tablefmt='grid'))
+    else:
+        print(f"Transaction not found in {branch_state}.")
 
 # Main program
 
 
 def main():
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+
+    Host = 'localhost'
+    User = config['database']['user']
+    Password = config['database']['password']
+    Database = 'creditcard_capstone'
+
+    # Connect to the creditcard_capstone database
+    db = mysql.connector.connect(
+        host=Host,
+        user=User,
+        password=Password,
+        database=Database
+    )
+
+    # Create a cursor to execute SQL queries
+    cursor = db.cursor()
+
+    # Display a menu and handle user's choice
     while True:
-        print("1. Display all transactions by zip and date")
-        print("2. Display number and total value by type")
-        print("3. Display total number and total value by branch state")
-        print("4. Exit")
+        print("| ============ Transaction Detail ============ | \n")
+        print("1) Display Transactions by Customer Zip Code and Date")
+        print("2) Display Number and Total Value of Transactions by Type")
+        print("3) Display Number and Total Value of Transactions by Branch State")
+        print("4) Quit")
 
-        choice = input("Enter your choice (1-4): ")
+        choice = input("Select your choice (1-4): ")
 
-        if choice == '1':
-            display_transactions_by_zip_date()
-        elif choice == '2':
-            display_transactions_by_type()
-        elif choice == '3':
-            display_transactions_by_branch_state()
-        elif choice == '4':
-            print("Exiting...")
+        if choice == "1":
+            os.system('cls' if os.name == 'nt' else 'clear')
+            display_transactions_by_zip_code_and_date(cursor)
+        elif choice == "2":
+            os.system('cls' if os.name == 'nt' else 'clear')
+            display_transactions_by_type(cursor)
+        elif choice == "3":
+            os.system('cls' if os.name == 'nt' else 'clear')
+            display_transactions_by_branch_state(cursor)
+        elif choice == "4":
+            print("Exiting the program...")
             break
         else:
-            print("Please try again!")
+            print("Invalid choice. Try again.")
+
+    # Close the database connection
+    db.close()
 
 
+# Entry point to the app
 if __name__ == "__main__":
     main()

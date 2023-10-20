@@ -1,12 +1,18 @@
+# Import necessary libraries
 import pandas as pd
 import mysql.connector
 from mysql.connector import pooling
 import configparser
+import os
 
+# Clear the screen (OS-specific)
+os.system('cls' if os.name == 'nt' else 'clear')
+
+# Read database configuration from 'config.ini' using configparser
 config = configparser.ConfigParser()
 config.read('config.ini')
 
-# Initialize a connection pool
+# Initialize a connection pool for MySQL
 connection_pool = pooling.MySQLConnectionPool(
     pool_name="my_pool",
     pool_size=5,
@@ -17,17 +23,20 @@ connection_pool = pooling.MySQLConnectionPool(
     database="creditcard_capstone"
 )
 
+# Function to get a connection from the connection pool
+
 
 def get_connection():
-    # Get a connection from the pool
     return connection_pool.get_connection()
+
+# Function to display customer details based on credit card number
 
 
 def display_customer_details(credit_card_no):
     try:
         connection = get_connection()
         cursor = connection.cursor(dictionary=True)
-        query = f"SELECT * FROM CDW_SAPP_CUSTOMER WHERE CREDIT_CARD_NO = %s"
+        query = "SELECT * FROM CDW_SAPP_CUSTOMER WHERE CREDIT_CARD_NO = %s"
         cursor.execute(query, (credit_card_no,))
         result = cursor.fetchall()
         if result:
@@ -41,6 +50,8 @@ def display_customer_details(credit_card_no):
     finally:
         cursor.close()
         connection.close()
+
+# Function to modify customer details based on credit card number
 
 
 def modify_customer_details(credit_card_no):
@@ -137,6 +148,8 @@ def modify_customer_details(credit_card_no):
             cursor.close()
             connection.close()
 
+# Function to generate monthly bill based on credit card number, year, and month
+
 
 def generate_monthly_bill(credit_card_no):
     year = input("Enter year (YYYY): ")
@@ -147,7 +160,7 @@ def generate_monthly_bill(credit_card_no):
     try:
         connection = get_connection()
         cursor = connection.cursor(dictionary=True)
-        query = "SELECT * FROM CDW_SAPP_CREDIT_CARD WHERE CUST_CC_NO = %s AND TIMEID LIKE %s "
+        query = "SELECT * FROM CDW_SAPP_CREDIT_CARD WHERE CUST_CC_NO = %s AND TIMEID LIKE %s ORDER BY TIMEID DESC"
         arg = (credit_card_no, f"{timeid}%")
         cursor.execute(query, arg)
         result = cursor.fetchall()
@@ -169,6 +182,8 @@ def generate_monthly_bill(credit_card_no):
     finally:
         cursor.close()
         connection.close()
+
+# Function to display transactions between two dates based on credit card number
 
 
 def display_transactions_between_dates(credit_card_no):
@@ -196,6 +211,7 @@ def display_transactions_between_dates(credit_card_no):
         connection.close()
 
 
+# Main program
 if __name__ == "__main__":
     while True:
         print("| ============ Customer Detail ============ | \n")
@@ -208,15 +224,19 @@ if __name__ == "__main__":
         option = input("Enter your choice: ")
 
         if option == "1":
+            os.system('cls' if os.name == 'nt' else 'clear')
             cc = input("Please enter card number: ")
             display_customer_details(cc)
         elif option == "2":
+            os.system('cls' if os.name == 'nt' else 'clear')
             cc = input("Please enter card number: ")
             modify_customer_details(cc)
         elif option == "3":
+            os.system('cls' if os.name == 'nt' else 'clear')
             cc = input("Please enter card number: ")
             generate_monthly_bill(cc)
         elif option == "4":
+            os.system('cls' if os.name == 'nt' else 'clear')
             cc = input("Please enter card number: ")
             display_transactions_between_dates(cc)
         elif option == "5":

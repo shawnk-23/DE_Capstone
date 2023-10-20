@@ -1,8 +1,5 @@
-# DE_Capstone
 
-readme
-
-# Project Overview
+# Capstone Project Overview
 
 This Capstone Project requires data engineers to work with the following technologies to manage an ETL process for a Loan Application dataset and a Credit Card dataset: Python (Pandas, advanced modules, e.g., Matplotlib), SQL, Apache Spark (Spark Core, Spark SQL), and Python Visualization and Analytics libraries. As a data engineer, you are expected to set up your development environments and perform installations on their local machines.
 

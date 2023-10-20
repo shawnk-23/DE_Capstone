@@ -15,8 +15,7 @@ Banks want to automate the loan eligibility process (in real-time) based on cust
 
 ## Workflow Diagram of the Requirements.
 
-![image](https://github.com/shawnk-23/DE_Capstone/assets/136545323/ee865e0f-8c89-412d-9b67-e31d9d899329)
-
+![image](https://github.com/shawnk-23/DE_Capstone/assets/136545323/2f969e5b-d911-490e-9676-52d62684fce1)
 
 
 ## Project Files

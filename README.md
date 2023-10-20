@@ -18,6 +18,9 @@ Banks want to automate the loan eligibility process (in real-time) based on cust
 
 # Workflow Diagram of the Requirements.
 
+![image](https://github.com/shawnk-23/DE_Capstone/assets/136545323/ee865e0f-8c89-412d-9b67-e31d9d899329)
+
+
 # Project Files
 
 - Etl.py: Used to extract and transform json files then load to DB.

@@ -18,6 +18,7 @@ Banks want to automate the loan eligibility process (in real-time) based on cust
 ![image](https://github.com/shawnk-23/DE_Capstone/assets/136545323/ee865e0f-8c89-412d-9b67-e31d9d899329)
 
 
+
 ## Project Files
 
 - Etl.py: Used to extract and transform json files then load to DB.
@@ -27,6 +28,12 @@ Banks want to automate the loan eligibility process (in real-time) based on cust
 - Loan.py: Used to fetch data from API and load to DB.
 - Graph2.py: Used for visualizing loan/transaction results.
 
+## Resolution of Technical Challenges:
+- During the implementation of the 'transactions.py' logic, I encountered some unexpected system-related warnings and errors when using Spark. To address this issue, I successfully resolved it by switching to 'mysql.connector' for handling the data.
+- Another challenge emerged when implementing an update query in 'customer.py' using Spark. I came to realize that Spark doesn't inherently support update queries, so I opted to employ 'mysql.connector' to overcome this complexity. This approach provided a straightforward solution to the problem.
+- Initially, I underestimated the complexity of working with Matplotlib. Upon realizing that Matplotlib could become somewhat complex, especially when it comes to customizing aspects like coloring bars differently, assigning distinct figure names, and more, I focused more intently on mastering these finer details.
+- An issue arose when attempting to read a JSON file from a GET response. To address this problem, I learned that utilizing 'spark.sparkContext.parallelize()' was necessary to effectively convert the file, ultimately resolving the issue.
+  
 ## References
 
 - API: https://raw.githubusercontent.com/platformps/LoanDataset/main/loan_data.json
